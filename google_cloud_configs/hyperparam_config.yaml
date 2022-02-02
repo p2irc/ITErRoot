@@ -1,0 +1,39 @@
+trainingInput:
+  hyperparameters:
+    goal: MAXIMIZE
+    hyperparameterMetricTag: "DiceScore"
+    maxTrials: 30
+    maxParallelTrials: 2
+    enableTrialEarlyStopping: True
+    params:
+      - parameterName: lr
+        type: DOUBLE
+        minValue: 0.001
+        maxValue: 0.01
+      - parameterName: lr-decay
+        type: DOUBLE
+        minValue: 0.85
+        maxValue: 0.99
+      - parameterName: crossent-weight
+        type: DOUBLE
+        minValue: 0.2
+        maxValue: 1.0
+      - parameterName: stopping-patience
+        type: INTEGER
+        minValue: 15
+        maxValue: 20
+      - parameterName: stopping-tolerance
+        type: DOUBLE
+        minValue: 0.0005
+        maxValue: 0.01
+      - parameterName: stopping-epochs
+        type: INTEGER
+        minValue: 0
+        maxValue: 10
+  scaleTier: CUSTOM
+  # MASTER Worker
+  masterType: n1-standard-4
+  masterConfig:
+    acceleratorConfig:
+      count: 4
+      type: NVIDIA_TESLA_T4

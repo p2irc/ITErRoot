@@ -1,0 +1,54 @@
+FROM nvidia/cuda:9.0-cudnn7-runtime
+
+WORKDIR /root
+
+# Get conda
+ENV PATH="/root/miniconda3/bin:${PATH}"
+ARG PATH="/root/miniconda3/bin:${PATH}"
+RUN apt-get update
+
+RUN apt-get install -y wget && rm -rf /var/lib/apt/lists/*
+
+RUN wget \
+    https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && mkdir /root/.conda \
+    && bash Miniconda3-latest-Linux-x86_64.sh -b \
+    && rm -f Miniconda3-latest-Linux-x86_64.sh 
+RUN conda --version
+
+# Create the environment 
+COPY environment.yml .
+RUN conda env create -f environment.yml
+
+# Make RUN commands use the environment
+SHELL ["conda", "run", "-n", "sprout", "/bin/bash", "-c"]
+
+# MAke sure the env is activated
+RUN echo "Make sure this works"
+RUN python -c "import torch"
+ENV GOOGLE_APPLICATION_CREDENTIALS "/root/sproutnetseg/creds.json"
+
+# Installs google cloud sdk, this is mostly for using gsutil to export model.
+RUN wget -nv \
+    https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz && \
+    mkdir /root/tools && \
+    tar xvzf google-cloud-sdk.tar.gz -C /root/tools && \
+    rm google-cloud-sdk.tar.gz && \
+    /root/tools/google-cloud-sdk/install.sh --usage-reporting=false \
+        --path-update=false --bash-completion=false \
+        --disable-installation-options && \
+    rm -rf /root/.config/* && \
+    ln -s /root/.config /config && \
+    # Remove the backup directory that gcloud creates
+    rm -rf /root/tools/google-cloud-sdk/.install/.backup
+
+# Path configuration
+ENV PATH $PATH:/root/tools/google-cloud-sdk/bin
+# Make sure gsutil will use the default service account
+RUN echo '[GoogleCompute]\nservice_account = default' > /etc/boto.cfg]
+
+# Run 
+RUN mkdir /root/sproutnetseg
+COPY ./ /root/sproutnetseg
+
+ENTRYPOINT ["conda", "run", "--no-capture-output", "-n", "sprout", "python", "-u", "sproutnetseg/segmentation/train.py"]
