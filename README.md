@@ -7,7 +7,7 @@ The Fastest way to get training and predicting with ITErRoot
 
 ## Clone the repository
 ```
-git clone PUT THE URL HERE
+git clone https://github.com/p2irc/ITErRoot.git
 ```
 
 ## Create and activate the conda environment
